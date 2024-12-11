@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rabbitmq-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: rabbitmq-init
+        image: rabbitmq:3-management
+        command: ["/bin/bash", "-c", "/etc/rabbitmq/init_rabbitmq.sh"]
+        env:
+        - name: RABBITMQ_HOST
+          value: "localhost"
+        - name: DEFAULT_USER
+          value: "guest"
+        - name: DEFAULT_PASS
+          value: "guest"
+        - name: NEW_USER
+          value: "koyunmft"
+        - name: NEW_PASS
+          value: "koyunmft_Password!"
+        - name: VHOST
+          value: "koyunmft"
+        volumeMounts:
+        - name: rabbitmq-init-script
+          mountPath: /etc/rabbitmq
+      restartPolicy: OnFailure
+      volumes:
+      - name: rabbitmq-init-script
+        configMap:
+          name: rabbitmq-config

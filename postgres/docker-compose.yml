@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '512M'
+    container_name: postgres_ssl
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: KoyunMft_Password_
+      #POSTGRES_DB: koyunmftdb
+      #POSTGRES_INITDB_ARGS: "--nosync --auth-host=md5 --auth-local=trust"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Volumen para datos de PostgreSQL
+      - postgres_ssl:/var/lib/postgresql/ssl   # Volumen para certificados SSL
+      #- postgres_init:/docker-entrypoint-initdb.d # Volumen para scripts de inicialización
+    #entrypoint: ["/docker-entrypoint-initdb.d/init.sh"]
+    command: >
+      postgres -c ssl=off
+               -c ssl_cert_file=/var/lib/postgresql/ssl/server.crt
+               -c ssl_key_file=/var/lib/postgresql/ssl/server.key
+               -c ssl_ca_file=/var/lib/postgresql/ssl/ca.crt
+
+volumes:
+  postgres_data:
+  postgres_ssl:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:\Users\HP-ELITEDESK-G3\Documents\Projects\postgrespvc\ssl
+  postgres_init:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:\Users\HP-ELITEDESK-G3\Documents\Projects\postgrespvc\initdb
+

@@ -1,0 +1,246 @@
+GitHub Copilot: Para configurar RabbitMQ con conexiones SSL y desplegarlo en Kubernetes con alta disponibilidad, necesitas seguir estos pasos:
+
+1. **Generar certificados SSL**.
+2. **Configurar RabbitMQ para usar SSL**.
+3. **Crear archivos de configuración de Kubernetes para RabbitMQ**.
+4. **Configurar un StatefulSet para RabbitMQ**.
+5. **Configurar un servicio para acceder a RabbitMQ**.
+6. **Configurar un script de inicialización para configurar colas y usuarios**.
+
+### Paso 1: Generar certificados SSL
+
+#OPCION1
+  Paso 1: Generar un certificado de autoridad (CA)
+  Primero, genera una clave privada para la CA y luego usa esa clave para crear un certificado de CA:
+  # Generar la clave privada de la CA
+    openssl genpkey -algorithm RSA -out ca.key -pkeyopt rsa_keygen_bits:4096
+
+  # Crear el certificado de la CA
+    openssl req -x509 -new -nodes -key ca.key -sha256 -days 365 -out ca.crt -subj "/C=ES/ST=Madrid/L=Madrid/O=Koyun/OU=Koyun/CN=mertpk.ddns.net"
+
+  Paso 2: Generar una clave privada y una solicitud de firma de certificado (CSR) para el servidor
+  # Generar la clave privada del servidor
+    openssl genpkey -algorithm RSA -out server.key -pkeyopt rsa_keygen_bits:4096
+
+  # Crear una solicitud de firma de certificado (CSR) para el servidor
+    openssl req -new -key server.key -out server.csr -subj "/C=ES/ST=Madrid/L=Madrid/O=Koyun/OU=Koyun/CN=mertpk.ddns.net"
+
+  Paso 3: Firmar el certificado del servidor con la CA
+  # Firmar el CSR del servidor con la CA para obtener el certificado del servidor
+    openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 9999 -sha256
+
+
+#OPCION2 CA Juntos
+  Puedes usar `openssl` para generar un certificado autofirmado para pruebas:
+    ```
+    openssl req -newkey rsa:4096 -nodes -keyout rabbitmq.key -x509 -days 365 -out rabbitmq.crt
+    ```
+  Esto generará dos archivos: `rabbitmq.key` (clave privada) y `rabbitmq.crt` (certificado).
+
+### Paso 2: Configurar RabbitMQ para usar SSL
+
+  Crea un archivo de configuración para RabbitMQ (`rabbitmq.conf`) con el siguiente contenido:
+
+    ```
+    listeners.ssl.default = 5671
+
+    ssl_options.cacertfile = /etc/rabbitmq/certs/ca.crt
+    ssl_options.certfile   = /etc/rabbitmq/certs/server.crt
+    ssl_options.keyfile    = /etc/rabbitmq/certs/server.key
+    ssl_options.verify     = verify_peer
+    ssl_options.fail_if_no_peer_cert = true
+
+    management.ssl.port       = 15671
+    management.ssl.cacertfile = /etc/rabbitmq/certs/ca.crt
+    management.ssl.certfile   = /etc/rabbitmq/certs/server.crt
+    management.ssl.keyfile    = /etc/rabbitmq/certs/server.key
+    management.ssl.verify     = verify_peer
+    ```
+
+### Paso 3: Crear archivos de configuración de Kubernetes para RabbitMQ
+
+  Crea un archivo `rabbitmq-configmap.yaml` para definir la configuración de RabbitMQ:
+    ```
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: rabbitmq-config
+    data:
+      enabled_plugins: |
+        [rabbitmq_management,rabbitmq_peer_discovery_k8s].
+      rabbitmq.conf: |
+        listeners.ssl.default = 5671
+        ssl_options.cacertfile = /etc/rabbitmq/certs/ca.crt
+        ssl_options.certfile   = /etc/rabbitmq/certs/server.crt
+        ssl_options.keyfile    = /etc/rabbitmq/certs/server.key
+        ssl_options.verify     = verify_peer
+        ssl_options.fail_if_no_peer_cert = true
+        management.ssl.port       = 15671
+        management.ssl.cacertfile = /etc/rabbitmq/certs/ca.crt
+        management.ssl.certfile   = /etc/rabbitmq/certs/server.crt
+        management.ssl.keyfile    = /etc/rabbitmq/certs/server.key
+        management.ssl.verify     = verify_peer
+        cluster_formation.peer_discovery_backend = rabbit_peer_discovery_k8s
+        cluster_formation.k8s.host = kubernetes.default.svc
+        cluster_formation.k8s.address_type = hostname
+        cluster_partition_handling = autoheal
+        queue_master_locator = min-masters
+    ```
+
+### Paso 4: Configurar un StatefulSet para RabbitMQ
+
+  Crea un archivo `rabbitmq-statefulset.yaml` para definir el StatefulSet de RabbitMQ:
+
+    ```
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: rabbitmq
+    spec:
+      serviceName: rabbitmq
+      replicas: 3
+      selector:
+        matchLabels:
+          app: rabbitmq
+      template:
+        metadata:
+          labels:
+            app: rabbitmq
+        spec:
+          containers:
+          - name: rabbitmq
+            image: rabbitmq:3.8-management
+            ports:
+            - containerPort: 5671
+            - containerPort: 15671
+            env:
+            - name: RABBITMQ_ERLANG_COOKIE
+              value: "mysecretcookie"
+            - name: RABBITMQ_DEFAULT_USER
+              value: "guest"
+            - name: RABBITMQ_DEFAULT_PASS
+              value: "guest"
+            volumeMounts:
+            - name: rabbitmq-config
+              mountPath: /etc/rabbitmq
+            - name: rabbitmq-certs
+              mountPath: /etc/rabbitmq/certs
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+          volumes:
+          - name: rabbitmq-config
+            configMap:
+              name: rabbitmq-config
+          - name: rabbitmq-certs
+            secret:
+              secretName: rabbitmq-certs
+      volumeClaimTemplates:
+      - metadata:
+          name: rabbitmq-data
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 10Gi
+    ```
+
+### Paso 5: Configurar un servicio para acceder a RabbitMQ
+
+  Crea un archivo `rabbitmq-service.yaml` para definir el servicio de RabbitMQ:
+
+    ```
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: rabbitmq
+    spec:
+      ports:
+      - port: 5671
+        name: amqp-ssl
+      - port: 15671
+        name: management-ssl
+      clusterIP: None
+      selector:
+        app: rabbitmq
+    ```
+
+### Paso 6: Configurar un script de inicialización para configurar colas y usuarios
+
+  Crea un archivo `init-rabbitmq.sh` para configurar colas y usuarios:
+
+### Paso 7: Crear un secreto para los certificados SSL
+
+  Crea un secreto en Kubernetes para almacenar los certificados SSL:
+
+    ```
+    kubectl create secret generic rabbitmq-certs --from-file=server.crt --from-file=server.key
+    ```
+
+### Paso 8: Desplegar RabbitMQ en Kubernetes
+
+  Aplica los archivos de configuración en Kubernetes:
+
+    ```sh
+    kubectl apply -f rabbitmq-configmap.yaml
+    kubectl apply -f rabbitmq-statefulset.yaml
+    kubectl apply -f rabbitmq-service.yaml
+    ```
+
+### Paso 9: Ejecutar el script de inicialización
+
+  Para ejecutar el script de inicialización, puedes crear un Job en Kubernetes que ejecute el script `init-rabbitmq.sh`:
+
+    ```
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: rabbitmq-init
+    spec:
+      template:
+        spec:
+          containers:
+          - name: rabbitmq-init
+            image: rabbitmq:3-management
+            command: ["/bin/bash", "-c", "/etc/rabbitmq/init_rabbitmq.sh"]
+            env:
+            - name: RABBITMQ_HOST
+              value: "localhost"
+            - name: DEFAULT_USER
+              value: "guest"
+            - name: DEFAULT_PASS
+              value: "guest"
+            - name: NEW_USER
+              value: "koyunmft"
+            - name: NEW_PASS
+              value: "koyunmft_password"
+            - name: VHOST
+              value: "koyunmft"
+            volumeMounts:
+            - name: rabbitmq-init-script
+              mountPath: /etc/rabbitmq
+          restartPolicy: OnFailure
+          volumes:
+          - name: rabbitmq-init-script
+            configMap:
+              name: rabbitmq-config
+    ```
+
+  Aplica el Job en Kubernetes:
+
+    ```sh
+    kubectl apply -f rabbitmq-init-job.yaml
+    ```
+
+### Resumen
+
+1. **Generar certificados SSL**.
+2. **Configurar RabbitMQ para usar SSL**.
+3. **Crear ConfigMap para la configuración de RabbitMQ**.
+4. **Configurar un StatefulSet para RabbitMQ**.
+5. **Configurar un servicio para acceder a RabbitMQ**.
+6. **Crear un script de inicialización para configurar colas y usuarios**.
+7. **Crear un secreto para los certificados SSL**.
+8. **Desplegar RabbitMQ en Kubernetes**.
+9. **Ejecutar el script de inicialización usando un Job en Kubernetes**.
+
+Siguiendo estos pasos, podrás desplegar RabbitMQ en Kubernetes con alta disponibilidad y conexiones SSL, y configurar automáticamente las colas, intercambios y usuarios necesarios.
