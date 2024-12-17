@@ -1,16 +1,18 @@
-name: Deploy RabbitMQ
+name: Deploy with Terraform
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
@@ -18,5 +20,5 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-      - name: Apply Terraform Configuration
+      - name: Apply Terraform Plan
         run: terraform apply -auto-approve
