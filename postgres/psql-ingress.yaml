@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: postgres-ingress
+  namespace: koyun
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  rules:
+  - host: postgres.koyunco.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: postgres
+            port:
+              number: 5432
+  tls:
+  - hosts:
+    - postgres.koyunco.local
+    secretName: postgres-ssl

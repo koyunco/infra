@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: koyun
+  labels:
+    app: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+      - name: setup-certs
+        image: busybox
+        command: [ "sh", "-c" ]
+        args:
+        - |
+          addgroup -g 70 postgres &&
+          adduser -u 70 -G postgres -D postgres &&
+          mkdir -p /etc/certs &&
+          cp /etc/postgresql/certs/server.key /etc/certs/server.key &&
+          chmod 0600 /etc/certs/server.key &&
+          chown 70:70 /etc/certs/server.key &&
+          ls -la /etc/certs
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/postgresql/certs
+        - name: tempfs
+          mountPath: /etc/certs
+      containers:
+      - name: postgres
+        image: postgres:17-alpine
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: config
+          mountPath: /etc/postgresql/config
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: secrets
+          mountPath: /var/lib/postgresql
+          readOnly: true
+        - name: certs
+          mountPath: /etc/postgresql/certs
+          readOnly: true
+        - name: tempfs
+          mountPath: /etc/certs
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+
+        args:
+        - -c
+        - config_file=/etc/postgresql/config/postgresql.conf
+        - -c
+        - hba_file=/etc/postgresql/config/pg_hba.conf
+
+      volumes:
+      - name: config
+        configMap:
+          name: postgres-config
+      - name: secrets
+        secret:
+          secretName: postgres-secret
+      - name: certs
+        secret:
+          secretName: postgres-cert-secret
+      - name: tempfs
+        emptyDir: {}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 15Gi
+      storageClassName: koyun-postgres-hostpath
