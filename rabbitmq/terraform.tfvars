@@ -1,5 +1,0 @@
-rabbitmq_user     = "myuser"
-rabbitmq_password = "mypassword"
-rabbitmq_certfile = "/path/to/server.crt"
-rabbitmq_keyfile  = "/path/to/server.key"
-rabbitmq_cacertfile = "/path/to/ca.crt"

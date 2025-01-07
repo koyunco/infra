@@ -1,0 +1,23 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq-cluster
+  namespace: koyun
+spec:
+  replicas: 3
+  rabbitmq:
+    additionalConfig: |
+      default_user=koyun
+      default_pass=KoyunUser_2020!
+  #resources:
+  #  requests:
+  #    cpu: "256Mi"
+  #    memory: "250Mi"
+  #  limits:
+  #    cpu: "1Gi"
+  #    memory: "1Gi"
+  persistence:
+    storageClassName: koyun-rabbitmq-hostpath
+    storage: "2Gi"
+  tls:
+    secretName: rabbitmq-cert-secret
