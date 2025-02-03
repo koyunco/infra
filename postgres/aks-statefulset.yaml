@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: koyun
+  labels:
+    app: postgres
+type: Opaque
+data:
+  POSTGRES_DB: a295dW4=
+  POSTGRES_USER: a295dW4=
+  POSTGRES_PASSWORD: S295dW5Vc2VyXzIwMjAh
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCekNDQWUrZ0F3SUJBZ0lVWEJaLzVqQk8ySmMrRUU2R3JZNTE4TnJZN0g0d0RRWUpLb1pJaHZjTkFRRUwKQlFBd0V6RVJNQThHQTFVRUF3d0ljRzl6ZEdkeVpYTXdIaGNOTWpVd01URTVNVGN4TWpJMVdoY05Nall3TVRFNQpNVGN4TWpJMVdqQVRNUkV3RHdZRFZRUUREQWh3YjNOMFozSmxjekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTElDelhoVjFXVDFXSTFyK2tYS01vZjhXUk02UVRTT3pMSUZ4UmxEckR0TS9Nc2gKbi9LeFFzaGthU0RWekJRblYzWUJDeU5sNkZBTDVMK0NFNkpnd3p4TVdPcjQ4K2xCT1VHTGxQZnpqTmM0QUh6awp6R25GSjY0OGo4eFhhL0J2eGZvZkZ0M1hQWXZJWitVNjlWNmliODV1REg1cWd0b1ZnYmxvTy8rRTNndkF0UXRuCjdYV3lQMkxzVW5aUHowQU5IMnJRcFp0T0RQRzFhOC94NCtYYllGT3VkUWQzYzFLYjFYcHYrajdSVjRhZFNnSDMKTktvSGVvaWhCeWFQenFCTllGQVgyT0hpOXh2SjFPSjZORHd5d0EyOWRqbmQ2SEZsRXgxNUdSVFRqRGxIMG4vQgp2TEZhRG5iOWl0ckZ6Y2o2bEorL1RaNm1iZUxpVURIU1ZUSHZIRXNDQXdFQUFhTlRNRkV3SFFZRFZSME9CQllFCkZCUHFHeVFwYW0rVmNjbGhtMkwwWHRuS1FLaUNNQjhHQTFVZEl3UVlNQmFBRkJQcUd5UXBhbStWY2NsaG0yTDAKWHRuS1FLaUNNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQmJ6YkRXVAp1cVpRaGdPZ0k4TS9ZOXllY1AvUDBuWS9HS05pSVBSblBLQkorVlkzTDZGYUZaUGlvQjRaY21VUUM0YVBQWTlYCmU4ZEFWODRPcStwU3ZDVGJkcE1BZlZ6OG0va3dPZE14N1ZFZG1HWXZsNnhiQkRrajRveWpWU0gvTzgydkxTS2sKUE54bGc2a0V0RkpTUUdPMVloZ2Viajh2aVFmajRibVBMejlTMDVhMjI5ZndWNm9MY0R6Q1M1WVdmeklXY1FxWgpha2FYNnM1ZzFvQUpSMWY1a1ZQaGxkbitMZC9jS1VJUVFoUTMyM3Z1Q0Jab01MWjVtREhwaE5zb3JLMlhZSWZmCk1RcTM3cGdLRWpWSGFmbVAvRWVvSGhERmhKaGMzSXhES1k0VUR1Z0lsemFWc1BSRzBja1RFcVk0SlIzZUFqZmoKaXdEd0lXc2JjTTh2ek4wPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRQ3lBczE0VmRWazlWaU4KYS9wRnlqS0gvRmtUT2tFMGpzeXlCY1VaUTZ3N1RQekxJWi95c1VMSVpHa2cxY3dVSjFkMkFRc2paZWhRQytTLwpnaE9pWU1NOFRGanErUFBwUVRsQmk1VDM4NHpYT0FCODVNeHB4U2V1UEkvTVYydndiOFg2SHhiZDF6Mkx5R2ZsCk92VmVvbS9PYmd4K2FvTGFGWUc1YUR2L2hONEx3TFVMWisxMXNqOWk3RkoyVDg5QURSOXEwS1diVGd6eHRXdlAKOGVQbDIyQlRyblVIZDNOU205VjZiL28rMFZlR25Vb0I5elNxQjNxSW9RY21qODZnVFdCUUY5amg0dmNieWRUaQplalE4TXNBTnZYWTUzZWh4WlJNZGVSa1UwNHc1UjlKL3dieXhXZzUyL1lyYXhjM0krcFNmdjAyZXBtM2k0bEF4CjBsVXg3eHhMQWdNQkFBRUNnZ0VBQTBNYjR0V24ySGJLamFUcDdEZDlYNUtYUzB2by8vNlI3NzA5Vkc0eUROQW4KWGMyYThjYWYwNjVMWXVlb0dzSnh6dDdNQm5VS29kVGw5MEI1L2FMS1VTT1JDWlZRV3Zqd0JLeDdLV1FVTTZsNgpFTS9ja3graXo0V2FtUU1OSGxYZUNleGg3ZVRRNHV2a1E0WW1FdnJsRTZKZXBqNXJjWFd0YitsaUdCZW1QZzdkCko1aTl5Mml5OTlXRGxJL2pkd1lndW4ybER0TFpJNXpiMDRVV2t5YXhhTjgxT3dPSkZjT2taV2xCZ3gwejNjMnoKaGRYSnJxVnc0NTFSeE42MlFxSVBtOUFIZno4R3hMOVl5RjVodGpDcTlocUR0WTlZdlg3V3d4YmVHckl4TGZPUAorcTl1SHpWSFI5cU9ObUIzSFY2TjY4cjlwQjBhNDhpYU5Ubk03TnU4a1FLQmdRRHBUK2NSa08zVnpyWkhxSXY3CmR5ZFdTV1B4V0NiMTkyWDV6elY4VmZBcXl0RHBSS0ErQmZSVjVHYUhUWnk4cTJDSS9yY1FrNGtaU1RFd29aR1gKUjhnZ0Y1bzc0azIrTHlJa2tGV0lSZFdnS2NTSEc4ZUFuakJiVHc1Z3BSMFBTN1d6eUtBZnpuWGFhbXVqWE9UTgpDZ1pzNEN5MHFKMzdhbzRDa0dJb0ZRbXdzd0tCZ1FERFVqb0NCRFdFaVR6R1hWVDdCaWo3aEQvVEVlOEpxZk43ClRSQmVJZCtVUkx5eXVLaTRIUGN2TndzcnExbnBTK0Fzd1ZHNC9iM0pRWVlqTnhhemlzRzhUZUlvSVZ6eU5IYkQKV2pWSDN0WHptbFVPcGhHbTgraVJCdnRwY3RqVkpOVkhZQk9WN2VQaXp3QzdLM1RVQkxubTMvMjQ2WUxNTzNtYgplQldOaUMrQ0NRS0JnUUNpKy9SNWF2c2FmMXNLMkExaHo2MGxOQU9qVjJkd01ER0d2MStueWdrS2U4QlJGR1cwCnJrZ3ZzR3lIWElwL3FtQzNrdWlqcGMwQ1l3VC82ZjVnNWY1Qm5QdGJsZzJsTEJ2MzJ2UkZURE9kdlUvUzZtOEYKeEh3WGJUU29BdkEzL1RXanNDVmIwc2kxbWQ0enN2TUs0VlAzdnVxOEVZYTdXWVoyK0JINTJpaDR6UUtCZ1FDego5M0tOWXhWd25nYktlenFPNUxra0xsR2tpRlNvb2RnL1Z0MXE3bWtVTTFWdWt5aWFJODQ1eWN6WUd0VUlXYW9mCmNxeDYrQWxEZzhVMWMwL09kRjVYdzZkSzlKcXdiRmkxWE12VkFlUSt4WWZ6ckY1OVp5VjFZMnFKV1pHaXFvSjkKZG0vMWFERGVUWDlOOWhkNk56U1hIdkduekRpQk41ZXdBVEJTclJXaENRS0JnQzFkd3QyK2pVbS9IV25ld0VpZgphL2hTV3BKYkJ5SHJsZDh3emM5c1lPR0Y1SXIwN0hRZSt3bzZlT2hxWWJJd1NKNjVXS1JSSHNYWFlSb3FFRWNuCjBNR1hPL254QkhiNzk3NmRHUVk5UDUxUG5JSHVNV2JWN0xWWVVucXJzMkI3UXcvMG9OQ2pHMUZ5WUJiSGJvN00KWXlmWmMrWFZ0UW0rNzZMY2hOdnl1K3ZyCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+ 
+
+---
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: koyun
+  labels:
+    app: postgres
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    ssl = on
+    ssl_cert_file = '/etc/postgresql/certs/server.crt'
+    ssl_key_file = '/etc/certs/tls.key'
+    # ssl_ca_file = '/etc/postgresql/certs/root.crt'
+  
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    # "local" is for Unix domain socket connections only
+    local   all             all                                     trust
+    # IPv4 local connections:
+    host    all             all             127.0.0.1/32            trust
+    # IPv6 local connections:
+    host    all             all             ::1/128                 trust
+    # Allow replication connections from localhost, by a user with the
+    # replication privilege.
+    local   replication     all                                     trust
+    host    replication     all             127.0.0.1/32            trust
+    host    replication     all             ::1/128                 trust
+
+    # Añadido el método de autenticación scram-sha-256 para todas las conexiones
+    host    all             all             all                     scram-sha-256
+    host    all             all             0.0.0.0/0               md5
+    hostssl all             all             0.0.0.0/0               cert
+
+
+---
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: koyun
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+      - name: setup-certs
+        image: busybox
+        command: [ "sh", "-c" ]
+        args:
+        - |
+          addgroup -g 70 postgres &&
+          adduser -u 70 -G postgres -D postgres &&
+          mkdir -p /etc/certs &&
+          cp /etc/postgresql/certs/tls.key /etc/certs/tls.key &&
+          chmod 0600 /etc/certs/tls.key &&
+          chown 70:70 /etc/certs/tls.key &&
+          ls -la /etc/certs
+        volumeMounts:
+        - name: postgres-secret
+          mountPath: /etc/postgresql/certs
+        - name: tempfs
+          mountPath: /etc/certs
+
+      containers:
+      - name: postgres
+        image: postgres:17-alpine
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+          - name: postgres-data
+            mountPath: /var/lib/postgresql/data
+          - name: postgres-config
+            mountPath: /etc/postgresql/config
+          - name: postgres-secret
+            mountPath: /etc/postgrescerts
+          - name: tempfs
+            mountPath: /etc/certs
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+
+        args:
+        - -c
+        - config_file=/etc/postgresql/config/postgresql.conf
+        - -c
+        - hba_file=/etc/postgresql/config/pg_hba.conf
+
+      volumes:
+        - name: postgres-config
+          configMap:
+            name: postgres-config
+        - name: postgres-secret
+          secret:
+            secretName: postgres-secret
+        - name: tempfs
+          emptyDir: {}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: koyun-disk
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: koyun
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432
+
+

@@ -1,0 +1,121 @@
+name: wingman-api-user
+
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'postgres/**'  # Monitorea cualquier cambio en la carpeta "services"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'postgres/**'  # Monitorea cualquier cambio en la carpeta "services"
+
+jobs:
+  deploy-service:
+    #runs-on: self-hosted  # Usa tu runner local
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
+
+
+        - name: About Deploy
+          run: |
+            echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+            echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+            echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+            echo "💡 The ${{ github.repository }} repository has been cloned to the runner. 🖥️ The workflow is now ready to test your code on the runner."
+            ls ${{ github.workspace }}
+
+
+        - name: azure cli login
+          uses: azure/login@v2
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+
+        - name: Deploy Service in Azure
+          if: github.ref == 'refs/heads/main'
+          run: |
+            echo "Building and deploying API User Microservice"
+            cd postgres/
+
+            az aks get-credentials --resource-group rg-koyun-prd --name aks-koyun-prd
+
+            # Update the image in the deployment in memory and apply it
+            kubectl apply -f psql-configmap.yaml
+            openssl req -new -x509 -days 3065 -nodes -out postgres.crt -keyout postgres.key -subj "/CN=postgres"
+            
+            kubectl create secret generic postgres-secrets --namespace=koyun --from-literal=POSTGRES_USER=koyun --from-literal=POSTGRES_PASSWORD=KoyunUser_2020! --from-literal=POSTGRES_DB=koyun --from-file=tls.crt=postgres.crt --from-file=tls.key=postgres.key
+
+            kubectl apply -f aks-statefulset.yaml
+
+
+        - name: Deploy Service in MicroK8s
+          if: github.ref == 'refs/heads/test'
+          run: |
+            echo "Building and deploying API User Microservice"
+            cd src/api-user
+
+            TAG="v$(date '+%Y%m%d%H%M%S')"
+            IMAGE="acrkoyunprd.azurecr.io/koyun-api-user:${TAG}"
+            echo "Building image $IMAGE"
+
+            az acr build --registry acrkoyunprd --image ${IMAGE} .
+
+            az aks get-credentials --resource-group rg-koyun-prd --name aks-koyun-prd
+
+            # Update the image in the deployment in memory and apply it
+            echo "cat ./statefulset.yaml | sed s|{IMAGE}|${IMAGE}|g | kubectl apply -f -"
+            cat ./deployment.yaml | sed "s|{IMAGE}|${IMAGE}|g" | kubectl apply -f -
+
+
+     #  - name: Cleanup old images
+     #    run: |
+     #      REGISTRY="acrkoyunprd"
+     #      REPOSITORY="wingman-api-user"
+     #      RESOURCE_GROUP="rg-koyun-prd"
+     #      AKS_CLUSTER="aks-koyun-prd"
+
+     #      echo $REGISTRY $REPOSITORY $RESOURCE_GROUP $AKS_CLUSTER
+
+     #      # Configuración básica
+     #      IMAGES_TO_KEEP=2
+     #      echo "Deleting old images, keeping only the two most recent ones"
+
+     #      # Obtener la lista de imágenes ordenadas por fecha de creación
+     #      IMAGES=$(az acr manifest list-metadata \
+     #        --name $REGISTRY \
+     #        --repository $REPOSITORY \
+     #        --orderby time_desc \
+     #        --query "[].digest" \
+     #        -o tsv)
+
+     #      # Obtener las imágenes a eliminar (todas excepto las más recientes)
+     #      IMAGES_TO_DELETE=$(echo "$IMAGES" | tail -n +$(($IMAGES_TO_KEEP + 1)))
+
+     #      # Eliminar las imágenes antiguas
+     #      if [ -n "$IMAGES_TO_DELETE" ]; then
+     #        echo "$IMAGES_TO_DELETE" | while read -r DIGEST; do
+     #          echo "Deleting image with digest: $DIGEST"
+     #          az acr manifest delete --name $REGISTRY --repository $REPOSITORY --digest $DIGEST --yes
+     #        done
+     #      else
+     #        echo "No images to delete. Keeping the most recent $IMAGES_TO_KEEP images."
+     #      fi
+
+
+
+
+    #    run: |
+    #      echo "Building and deploying ${{ matrix.service }}"
+    #      ls -lrta
+    #      pwd
+    #      cd services/${{ matrix.service }}
+    #      ls -lrta
+    #      pwd
+    #      docker build -t 192.168.1.100:32000/${{ matrix.service }}:latest .
+    #      docker push 192.168.1.100:32000/${{ matrix.service }}:latest
+    #      cd terraform/
+    #      terraform init
+    #      terraform apply -auto-approve

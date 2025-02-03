@@ -10,8 +10,9 @@ data:
     listen_addresses = '*'
     ssl = on
     ssl_cert_file = '/etc/postgresql/certs/server.crt'
-    ssl_key_file = '/etc/certs/server.key'
-    ssl_ca_file = '/etc/postgresql/certs/root.crt'
+    ssl_key_file = '/etc/certs/tls.key'
+    # ssl_ca_file = '/etc/postgresql/certs/root.crt'
+  
   pg_hba.conf: |
     # TYPE  DATABASE        USER            ADDRESS                 METHOD
     # "local" is for Unix domain socket connections only

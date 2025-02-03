@@ -1,6 +1,21 @@
+#MicroK8s
+#apiVersion: storage.k8s.io/v1
+#kind: StorageClass
+#metadata:
+#  name: koyun-postgres-hostpath
+#provisioner: microk8s.io/hostpath
+#volumeBindingMode: WaitForFirstConsumer
+
+
+
+#AKS
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: koyun-postgres-hostpath
-provisioner: microk8s.io/hostpath
+  name: koyun-disk
+provisioner: disk.csi.azure.com
+parameters:
+  storageaccounttype: StandardSSD_LRS # Cambia a Premium_LRS para mayor rendimiento
+  cachingMode: None
+reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
