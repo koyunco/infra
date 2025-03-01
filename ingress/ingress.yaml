@@ -1,207 +1,34 @@
-# ingress-koyun.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: multi-service-ingress
+  name: api-ingress
   namespace: koyun
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/backend-protocol: HTTP
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /$2  # Quita /api/v1/ antes de enviar al backend
+    #cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: public
-  tls:
-    - hosts:
-        - koyunco.ddns.net
-      secretName: koyun-tls
+  ingressClassName: webapprouting.kubernetes.azure.com
+  #tls:
+  #- hosts:
+  #  - koyunco.com
+  #  secretName: letsencrypt-cert  # Certificado TLS almacenado como secreto en Kubernetes
   rules:
-    - host: koyunco.ddns.net
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: hello-world
-              port:
-                number: 80
-        - path: /api/user/(.*)
-          pathType: Prefix
-          backend:
-            service:
-              name: wingman-api-user
-              port:
-                number: 8000
-
-
----
-
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  name: multi-service-ingress
-  namespace: kube-system
-spec:
-  ingressClassName: public
-  rules:
-  - host: kubeadmin.koyunco.local
-    http:
+  #- host: koyunco.com
+   - http:
       paths:
 
-      - path: /
+      - path: /api/v1/auth(/|$)(.*)
         pathType: Prefix
         backend:
           service:
-            name: kubernetes-dashboard   # Servicio que maneja tu página web
-            port:
-              number: 443            # Puerto de tu servidor web (HTTPS)
-
-  tls:
-  - hosts:
-    - koyunco.ddns.net
-    secretName: kubernetes-dashboard-certs
-
-
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: multi-service-ingress
-  namespace: default
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: rabbitmq.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: rabbitmq-service
-            port:
-              number: 15672
-  - host: postgres.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: postgres-service
-            port:
-              number: 5432
-  - host: myapp.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: myapp-service
+            name: api-auth  # Servicio interno de Kubernetes
             port:
               number: 80
-
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: dashboard-ingress
-  namespace: kube-system
-  annotations:
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"  # Importante para servicios HTTPS
-spec:
-  rules:
-  - host: koyunco.ddns.net
-    http:
-      paths:
-      - path: /
+              
+      - path: /api/v1/user(/|$)(.*)
         pathType: Prefix
         backend:
           service:
-            name: kubernetes-dashboard
+            name: api-user  # Servicio interno de Kubernetes
             port:
-              number: 443
-  tls:
-  - hosts:
-    - koyunco.ddns.net
-    secretName: kubernetes-dashboard-certs
-
-
-
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: dashboard-ingress
-  namespace: kube-system
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-spec:
-  ingressClassName: public
-  tls:
-    - hosts:
-        - koyunco.ddns.net
-      secretName: kubernetes-dashboard-certs
-  rules:
-    - host: koyunco.ddns.net
-      http:
-        paths:
-          - path: /kubernetesadmin
-            pathType: Prefix
-            backend:
-              service:
-                name: kubernetes-dashboard
-                port:
-                  number: 443
-
-
-
-
-
-# Please edit the object below. Lines beginning with a '#' will be ignored,
-# and an empty file will abort the edit. If an error occurs while saving this file will be
-# reopened with the relevant failures.
-#
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"nginx.ingress.kubernetes.io/backend-protocol":"HTTPS"},"name":"dashboard-ingress","namespace":"kube-system"},"spec":{"rules":[{"host":"koyunco.ddns.net","http":{"paths":[{"backend":{"service":{"name":"kubernetes-dashboard","port":{"number":443}}},"path":"/kubernetesadmin","pathType":"Prefix"}]}}],"tls":[{"hosts":["koyunco.ddns.net"],"secretName":"kubernetes-dashboard-certs"}]}}
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-  creationTimestamp: "2025-01-01T16:25:32Z"
-  generation: 4
-  name: dashboard-ingress
-  namespace: kube-system
-  resourceVersion: "4869514"
-  uid: 250c4922-84ab-4a16-be74-ae1bba7e4bed
-spec:
-  ingressClassName: public
-  rules:
-  - host: koyunco.ddns.net
-    http:
-      paths:
-      - backend:
-          service:
-            name: kubernetes-dashboard
-            port:
-              number: 443
-        path: /
-        pathType: Prefix
-  tls:
-  - hosts:
-    - koyunco.ddns.net
-    secretName: kubernetes-dashboard-certs
-status:
-  loadBalancer:
-    ingress:
-    - ip: 127.0.0.1
+              number: 80

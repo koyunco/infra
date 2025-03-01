@@ -1,23 +1,22 @@
-name: wingman-api-user
+name: Deploy API Auth
 
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
-    paths:
-      - 'postgres/**'  # Monitorea cualquier cambio en la carpeta "services"
+    #paths:
+    #  - 'ingress/**'  # Monitorea cualquier cambio en la carpeta "services"
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'postgres/**'  # Monitorea cualquier cambio en la carpeta "services"
+      - 'OOingress/**'  # Monitorea cualquier cambio en la carpeta "services"
 
 jobs:
-  deploy-service:
-    #runs-on: self-hosted  # Usa tu runner local
+  deploy:
     runs-on: ubuntu-latest
     steps:
-        - uses: actions/checkout@v4
-
+        - name: Checkout code
+          uses: actions/checkout@v4
 
         - name: About Deploy
           run: |
@@ -27,47 +26,46 @@ jobs:
             echo "💡 The ${{ github.repository }} repository has been cloned to the runner. 🖥️ The workflow is now ready to test your code on the runner."
             ls ${{ github.workspace }}
 
-
-        - name: azure cli login
+        - name: Log in to Azure Container Registry
           uses: azure/login@v2
           with:
             creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-
         - name: Deploy Service in Azure
-          if: github.ref == 'refs/heads/main'
+          env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           run: |
-            echo "Building and deploying API User Microservice"
-            cd postgres/
+            echo "----Building and deploying API Auth Microservice----"
+            cd src/api-auth
+            echo "Current directory: $(pwd)"
+            echo "Listing files:"
+            FILE_LIST=$(ls -lrta)
+            echo "$FILE_LIST"
 
-            az aks get-credentials --resource-group rg-koyun-prd --name aks-koyun-prd
-
-            # Update the image in the deployment in memory and apply it
-            kubectl apply -f psql-configmap.yaml
-            openssl req -new -x509 -days 3065 -nodes -out postgres.crt -keyout postgres.key -subj "/CN=postgres"
-            
-            kubectl create secret generic postgres-secrets --namespace=koyun --from-literal=POSTGRES_USER=koyun --from-literal=POSTGRES_PASSWORD=KoyunUser_2020! --from-literal=POSTGRES_DB=koyun --from-file=tls.crt=postgres.crt --from-file=tls.key=postgres.key
-
-            kubectl apply -f aks-statefulset.yaml
-
-
-        - name: Deploy Service in MicroK8s
-          if: github.ref == 'refs/heads/test'
-          run: |
-            echo "Building and deploying API User Microservice"
-            cd src/api-user
-
+            echo "----Registery container TAG----"
             TAG="v$(date '+%Y%m%d%H%M%S')"
-            IMAGE="acrkoyunprd.azurecr.io/koyun-api-user:${TAG}"
-            echo "Building image $IMAGE"
+            IMAGE="acrkoyunprd.azurecr.io/api-auth:${TAG}"
+            echo "$IMAGE"
 
+            echo "----Building image $IMAGE----"
             az acr build --registry acrkoyunprd --image ${IMAGE} .
 
+            echo "----Getting AKS credentials----"
             az aks get-credentials --resource-group rg-koyun-prd --name aks-koyun-prd
 
-            # Update the image in the deployment in memory and apply it
-            echo "cat ./statefulset.yaml | sed s|{IMAGE}|${IMAGE}|g | kubectl apply -f -"
-            cat ./deployment.yaml | sed "s|{IMAGE}|${IMAGE}|g" | kubectl apply -f -
+            echo "----Update the image in the deployment in memory and apply it----"
+            sed -e 's|{IMAGE}|'"${IMAGE}"'|g' -e 's|{DATABASE_URL}|'"${DATABASE_URL}"'|g' -e 's|{SECRET_KEY}|'"${SECRET_KEY}"'|g' ./deployment.yaml | kubectl apply -f -
+
+        - name: Get Pod Logs
+          run: |
+            echo "----Fetching logs for API Auth pods----"
+            PODS=$(kubectl get pods -l app=api-auth -o jsonpath='{.items[*].metadata.name}')
+            for pod in $PODS; do
+              echo "Logs for pod $pod:"
+              kubectl logs $pod
+            done
+
 
 
      #  - name: Cleanup old images
